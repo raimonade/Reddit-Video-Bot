@@ -24,6 +24,13 @@ def get_subreddit_undone(submissions: list, subreddit, times_checked=0):
     for submission in submissions:
         if already_done(done_videos, submission):
             continue
+        if banned(submission):
+            print("BANNED POST")
+            continue
+        # if submission thread_post is larger than 1000 characters, it will be too long for the video
+        if len(submission.selftext) > 1000:
+            print("Too long post")
+            continue
         if submission.over_18:
             try:
                 if not settings.config["settings"]["allow_nsfw"]:
@@ -39,6 +46,16 @@ def get_subreddit_undone(submissions: list, subreddit, times_checked=0):
                 f'This post has under the specified minimum of comments ({settings.config["reddit"]["thread"]["min_comments"]}). Skipping...'
             )
             continue
+        if submission.url and submission.title:
+            print_substep(
+            f"Using submission: {submission.title} - {submission.url}")
+            print_substep("Do you want to continue? (y/n)")
+            if input("> ").casefold() == "y":
+                print_substep("Confirmed.")
+            else:
+                print_substep("Running again, .")
+                continue     
+        
         return submission
     print("all submissions have been done going by top submission order")
     VALID_TIME_FILTERS = [
@@ -61,6 +78,18 @@ def get_subreddit_undone(submissions: list, subreddit, times_checked=0):
         times_checked=index,
     )  # all the videos in hot have already been done
 
+def banned(submission):
+    if(submission.banned_by != None):
+        return True
+    if(submission.removed_by_category != None):
+        return True
+    if(submission.banned_at_utc != None):
+        return True
+    if(submission.removal_reason != None):
+        return True
+    if(submission.mod_reason_by != None):
+        return True
+    
 
 def already_done(done_videos: list, submission) -> bool:
     """Checks to see if the given submission is in the list of videos

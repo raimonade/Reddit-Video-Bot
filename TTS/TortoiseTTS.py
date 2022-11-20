@@ -53,7 +53,7 @@ voices = [
 class TortoiseTTS:
     def __init__(self):
         self.url = "https://streamlabs.com/polly/speak"
-        self.max_chars = 550
+        self.max_chars = 350
         self.voices = voices
 
     def run(self, text, filepath, random_voice: bool = False):
@@ -68,7 +68,11 @@ class TortoiseTTS:
                         ["tortoise_voice"])
 
         # Pick a "preset mode" to determine quality. Options: {"ultra_fast", "fast" (default), "standard", "high_quality"}. See docs in api.py
-        preset = "standard"
+        # preset = "standard"
+        if settings.config["settings"]["tts"]["tortoise_preset"]:
+            preset = settings.config["settings"]["tts"]["tortoise_preset"]
+        else:
+            preset = "fast"
 
         voice_samples, conditioning_latents = load_voice(voice)
         gen = tts.tts_with_preset(text, voice_samples=voice_samples, conditioning_latents=conditioning_latents,

@@ -13,7 +13,7 @@ from utils.console import print_step, print_substep
 from utils.voice import sanitize_text
 from utils import settings
 
-DEFAULT_MAX_LENGTH: int = 50  # video length variable
+DEFAULT_MAX_LENGTH: int = 120  # video length variable
 
 
 class TTSEngine:
@@ -52,7 +52,9 @@ class TTSEngine:
 
         # This file needs to be removed in case this post does not use post text, so that it won't appear in the final video
         try:
-            Path(f"{self.path}/posttext.wav").unlink()
+            # Path(f"{self.path}/post_0.wav").unlink()
+            for file in Path(self.path).glob("post_*.wav"):
+                file.unlink()
         except OSError:
             pass
 
@@ -61,7 +63,11 @@ class TTSEngine:
         self.call_tts("title", process_text(
             self.reddit_object["thread_title"]))
         processed_text = process_text(self.reddit_object["thread_post"])
-        if processed_text != "" and settings.config["settings"]["storymode"] == True:
+
+        post_idx = None
+        if len(processed_text) > 350:
+            self.split_posttext(processed_text)
+        else:
             self.call_tts("posttext", processed_text)
 
         idx = None
@@ -82,6 +88,35 @@ class TTSEngine:
         print_substep("Saved Text to MP3 files successfully.",
                       style="bold green")
         return self.length, idx
+
+    def split_posttext(self, text: str):
+        split_files = []
+        split_text = [
+            x.group().strip()
+            for x in re.finditer(
+                r" *(((.|\n){0," + str(self.tts_module.max_chars) + "})(\.|.$))", text
+            )
+        ]
+        offset = 0
+        for idy, text_cut in enumerate(split_text):
+            # print(f"{idx}-{idy}: {text_cut}\n")
+            new_text = process_text(text_cut)
+            if not new_text or new_text.isspace():
+                offset += 1
+                continue
+
+            self.call_tts(f"posttext-{idy - offset}.part", new_text)
+            split_files.append(AudioFileClip(
+                f"{self.path}/posttext-{idy - offset}.part.wav"))
+
+        CompositeAudioClip([concatenate_audioclips(split_files)]).write_audiofile(
+            f"{self.path}/posttext.wav", fps=44100, verbose=False, logger=None
+        )
+
+        for i in split_files:
+            name = i.filename
+            i.close()
+            Path(name).unlink()
 
     def split_post(self, text: str, idx: int):
         split_files = []

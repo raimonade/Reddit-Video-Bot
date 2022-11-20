@@ -78,8 +78,7 @@ def make_final_video(
     # Gather all audio clips
     audio_clips = [AudioFileClip(
         f"assets/temp/{id}/wav/{i}.wav") for i in range(number_of_clips)]
-    audio_clips.insert(0, AudioFileClip(f"assets/temp/{id}/wav/posttext.wav"))
-    audio_clips.insert(0, AudioFileClip(f"assets/temp/{id}/wav/title.wav"))
+    audio_clips.insert(1, AudioFileClip(f"assets/temp/{id}/wav/posttext.wav"))
     audio_concat = concatenate_audioclips(audio_clips)
     audio_composite = CompositeAudioClip([audio_concat])
 
@@ -104,7 +103,7 @@ def make_final_video(
     for i in range(0, number_of_clips):
         image_clips.append(
             ImageClip(f"assets/temp/{id}/png/comment_{i}.png")
-            .set_duration(audio_clips[i + 2].duration)
+            .set_duration(audio_clips[i + 1].duration)
             .resize(width=W - 100)
             .set_opacity(new_opacity)
             .crossfadein(new_transition)

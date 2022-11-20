@@ -24,6 +24,12 @@ background_options = {
         "bbswitzer",
         "center",
     ),
+    "rain": (  # Rain at night
+        "https://www.youtube.com/watch?v=fPv4JETf6qI",
+        "rain.mp4",
+        "stock",
+        "center",
+    ),
     "gta": (  # GTA Stunt Race
         "https://www.youtube.com/watch?v=qGa9kWREOnE",
         "gta-stunt-race.mp4",
